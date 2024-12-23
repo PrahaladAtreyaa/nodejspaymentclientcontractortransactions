@@ -1,4 +1,4 @@
-# BACKEND TASK
+# BACKEND PROJECT
 
 💫 Welcome! 🎉
 
