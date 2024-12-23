@@ -1,0 +1,318 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "Deel Backend API",
+    "version": "1.0.0",
+    "title": "Deel API"
+  },
+  "host": "localhost:3001",
+  "basePath": "/",
+  "tags": [
+    {
+      "name": "Contracts",
+      "description": "Contract management"
+    },
+    {
+      "name": "Jobs",
+      "description": "Job management"
+    },
+    {
+      "name": "Balances",
+      "description": "Balance management"
+    },
+    {
+      "name": "Admin",
+      "description": "Admin operations"
+    }
+  ],
+  "schemes": ["http"],
+  "paths": {
+    "/contracts/{id}": {
+      "get": {
+        "tags": ["Contracts"],
+        "summary": "Get contract by ID",
+        "description": "Returns a contract by ID if it belongs to the profile calling.",
+        "operationId": "getContractById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Contract ID",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "name": "profile_id",
+            "in": "header",
+            "description": "Profile ID",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Contract not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/contracts": {
+      "get": {
+        "tags": ["Contracts"],
+        "summary": "Get non-terminated contracts",
+        "description": "Returns a list of non-terminated contracts belonging to the profile calling.",
+        "operationId": "getContracts",
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "header",
+            "description": "Profile ID",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/jobs/unpaid": {
+      "get": {
+        "tags": ["Jobs"],
+        "summary": "Get unpaid jobs",
+        "description": "Returns all unpaid jobs for active contracts (status 'in_progress') for the profile calling (client or contractor).",
+        "operationId": "getUnpaidJobs",
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "header",
+            "description": "Profile ID",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "404": {
+            "description": "No unpaid jobs found for this profile"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/jobs/{job_id}/pay": {
+      "post": {
+        "tags": ["Jobs"],
+        "summary": "Pay for a job",
+        "description": "Allows a client to pay for a job if they have enough balance and the job is under an active contract ('in_progress').",
+        "operationId": "payForJob",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "description": "Job ID",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "name": "profile_id",
+            "in": "header",
+            "description": "Profile ID",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment successful"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "403": {
+            "description": "Forbidden - Only clients can pay for jobs"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Job not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/balances/deposit/{userId}": {
+      "post": {
+        "tags": ["Balances"],
+        "summary": "Deposit into balance",
+        "description": "Allows a client to deposit money into their own balance. The deposit cannot exceed 25% of the total unpaid jobs for active contracts ('in_progress').",
+        "operationId": "depositFunds",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "description": "User ID",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "name": "profile_id",
+            "in": "header",
+            "description": "Profile ID",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "name": "amount",
+            "in": "body",
+            "description": "Amount to deposit",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "amount": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deposit successful"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "403": {
+            "description": "Forbidden - Only clients can deposit into their account"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Client not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/admin/best-profession": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Get best profession",
+        "description": "Returns the profession that earned the most money (sum of jobs paid) for any contractor that worked in the query time range.",
+        "operationId": "getBestProfession",
+        "parameters": [
+          {
+            "name": "start",
+            "in": "query",
+            "description": "Start date (YYYY-MM-DD)",
+            "required": true,
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "description": "End date (YYYY-MM-DD)",
+            "required": true,
+            "type": "string",
+            "format": "date"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "404": {
+            "description": "No data found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/admin/best-clients": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Get best clients",
+        "description": "Returns the clients that paid the most for jobs in the query time period. Limit query parameter should be applied; default limit is 2.",
+        "operationId": "getBestClients",
+        "parameters": [
+          {
+            "name": "start",
+            "in": "query",
+            "description": "Start date (YYYY-MM-DD)",
+            "required": true,
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "description": "End date (YYYY-MM-DD)",
+            "required": true,
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Limit",
+            "required": false,
+            "type": "integer",
+            "default": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "404": {
+            "description": "No data found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    }
+  }
+}
